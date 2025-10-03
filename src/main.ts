@@ -1,6 +1,5 @@
 import {App, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 
-// Remember to rename these classes and interfaces!
 
 interface WindchillPluginSettings {
 	enableLiveUpdate: boolean;
@@ -29,7 +28,8 @@ export default class WindchillLinker extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 		this.compileRegex();
 
-		/*
+		/* Removed Markdown Post Processor. Only purpose was to color the hyperlinks differently
+		 * May re-visit this in the future and add user-customizable hyperlink color.
 		this.registerMarkdownPostProcessor((el) => {
 			const links = el.querySelectorAll('a.external-link');
 			Array.from(links).forEach((link) => {
@@ -40,7 +40,8 @@ export default class WindchillLinker extends Plugin {
 		});
 		 */
 
-		/*
+		/* Removed command. Originally used during development testing
+		 * May revisit in the future for user-initiated vault-wide link replacement
 		this.addCommand({
 			id: "convert-all-wc-links",
 			name: "Convert WC:######## links in all notes",
@@ -84,7 +85,9 @@ export default class WindchillLinker extends Plugin {
 		);
 	}
 
-	/*
+	/* Removed Exclude Block compatibility. Wasn't working as intended. Needs fixing
+	 * May re-visit in the future, but I don't expect/intend users to create hyperlinks
+	 * in code blocks or yaml.
 	convertExcludingBlocks(content: string, regex: RegExp): string {
 		const blocks: { start: number; end: number }[] = [];
 
