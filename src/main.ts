@@ -69,7 +69,7 @@ export default class LiveRegexReplace extends Plugin {
 
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor) => {
-				if (!editor || this.isUpdating || !this.compiledRe) return;
+				if (!editor || this.isUpdating || !this.compiledRe || !this.settings.enableLiveUpdate) return;
 
 				const re = this.compiledRe;
 				const cursor = editor.getCursor();
