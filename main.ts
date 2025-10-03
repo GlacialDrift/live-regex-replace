@@ -21,6 +21,7 @@ export default class WindchillLinker extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new SettingTab(this.app, this));
 
+		/*
 		this.registerMarkdownPostProcessor((el) => {
 			const links = el.querySelectorAll('a.external-link');
 			Array.from(links).forEach((link) => {
@@ -29,7 +30,9 @@ export default class WindchillLinker extends Plugin {
 				}
 			});
 		});
+		 */
 
+		/*
 		this.addCommand({
 			id: "convert-all-wc-links",
 			name: "Convert WC:######## links in all notes",
@@ -51,23 +54,9 @@ export default class WindchillLinker extends Plugin {
 				new Notice("Windchill links converted in all notes.");
 			}
 		});
+		 */
 
-		const WC_UNLINKED_REGEX = /(?<!\[)WC:(\d{8})(?!\]\()/g;
-
-		// Manual conversion command
-		this.addCommand({
-			id: "convert-wc-links",
-			name: "Convert WC:######## to Markdown Links",
-			editorCallback: (editor) => {
-				const content = editor.getValue();
-
-				const updated = content.replace(WC_UNLINKED_REGEX, (match, num) => {
-					return `[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`;
-				});
-
-				editor.setValue(updated);
-			},
-		});
+		const WC_UNLINKED_REGEX = /(?<!\[)WC:(\d{8})(?!]\()/g;
 
 		let isUpdating = false;
 
@@ -91,6 +80,7 @@ export default class WindchillLinker extends Plugin {
 		);
 	}
 
+	/*
 	convertExcludingBlocks(content: string, regex: RegExp): string {
 		const blocks: { start: number; end: number }[] = [];
 
@@ -122,6 +112,7 @@ export default class WindchillLinker extends Plugin {
 			return `[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`;
 		});
 	}
+	 */
 
 	onunload() {
 
