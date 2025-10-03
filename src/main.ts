@@ -24,7 +24,6 @@ export default class WindchillLinker extends Plugin {
 	private isUpdating = false;
 
 	async onload() {
-		console.log("WindchillLinker plugin loaded");
 
 		await this.loadSettings();
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -159,7 +158,6 @@ class SettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
-		containerEl.createEl("h3", { text: "Windchill Linker Settings" });
 
 		new Setting(containerEl)
 			.setName("Live editor updates")
@@ -172,7 +170,7 @@ class SettingTab extends PluginSettingTab {
 					}));
 
 		new Setting(containerEl)
-			.setName("Show Advanced Settings")
+			.setName("Show advanced Settings")
 			.addToggle(toggle =>{
 				toggle.setValue(this.plugin.settings.advancedToggle)
 					.onChange(async (value) => {
@@ -183,7 +181,7 @@ class SettingTab extends PluginSettingTab {
 			});
 
 		if(this.plugin.settings.advancedToggle){
-			containerEl.createEl("h3", {text: "Regular Expression Settings. DO NOT CHANGE without knowing Regular Expressions"});
+			new Setting(containerEl).setName("Regular Expression Settings. DO NOT CHANGE without knowing Regular Expressions").setHeading();
 
 			new Setting(containerEl)
 				.setName("Reset Regular Expressions")

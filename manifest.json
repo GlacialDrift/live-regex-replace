@@ -8,5 +8,5 @@
 	"authorUrl": "https://github.com/GlacialDrift/windchill-linker",
 	"main": "main.js",
 	"styles": "styles.css",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }
