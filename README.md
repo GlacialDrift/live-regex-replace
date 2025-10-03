@@ -1,94 +1,52 @@
-# Obsidian Sample Plugin
+---
+Author: Mike Harris
+Version: 0.1.0
+Github: https://github.com/GlacialDrift/windchill-linker/tree/master
+---
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+# Live Regex Replace
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+This plugin is an active listener in your Obsidian Vault. It looks for any patterns matching the Regular Expression pattern defined in the plugin settings. If found, the text in your vault is replaced with the replacement text specified in the plugin settings. Optionally, the replacement text can contain contents of the matched text using regular expression matching.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+This plugin was originally developed to replace `WC:########` with a hyperlink to Windchill webpages for personal use. The plugin was then expanded to be of use to all Boston Scientific employees that use Windchill for ease of note-taking. The plugin was then modified to provide users with customizable regular expression patterns and replacements. 
 
-## First time developing plugins?
+## License
 
-Quick starting guide for new plugin devs:
+Please read the LICENSE file included in this github repository. Currently, this plugin is licensed under the MIT License.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Functionality
 
-## Releasing new releases
+When text matching a regular expression is found, it is automatically replaced by the replacement text specified in settings. This happens automatically while typing in Obsidian Live Preview mode.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+**By default**, this plugin ships with Windchill document replacement. When an 8-digit number is preceded by "WC:", it is replaced with a hyperlink to the active version of the document with the corresponding 8-digit number.
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+Care must be taken in designing the regular expressions and replacements. For example, using a regular expression `WC:(d{8})` and replacement `[WC:$1](hyperlink)` will continually replace the text field of the hyperlink with additional nested hyperlinks as the text field remains unchanged. Therefore, it is recommended that lookbehinds and lookaheads are used to prevent cascading replacement.
 
-## Adding your plugin to the community plugin list
+Currently, the plugin only actively searches the line actively being edited. Therefore, to update existing text with a hyperlink, simply click on the line containing the text and update the line. 
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Settings
 
-## How to use
+More information about regular expressions is available online. The plugin uses the `replace` function to replace pattern-matched text. Therefore, `replace` -compatible fields are required. My go-to cheat sheet is the [Quick-Start: Regex Cheat Sheet](https://www.rexegg.com/regex-quickstart.php).
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+#### Regular Expression Pattern
 
-## Manually installing the plugin
+This is the regular expression used to pattern match text within your Obsidian vault. The default setting uses the following regular expression:
+	`(?<!\[)WC:(\d{8})(?!]\()`
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+#### Regular Expression Flags
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+Optional regular expression flags to be included with the pattern when compiling the regular expression pattern. Currently, the global flag is always included regardless of user input, but other flags may be added.
 
-## Funding URL
+#### Replacement Text
 
-You can include funding URLs where people who use your plugin can financially support it.
+This is the text that will be used to replace the pattern-matched text in the note. This can be a simple string, but it may also include matches from the regular expression match. Use `$1`, `$2`, ... to match groups from the regular expression and `$&` to match the entire pattern. The plugin ships with a hyperlink replacement that links to Windchill documents.
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## RoadMap
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+This plugin was written originally for personal use and expanded to offer generalized functionality. Therefore, while this roadmap lays out some possible future changes, no future updates are guaranteed.
+- Add a markdown post-processor to include CSS classes in replaced text for optional CSS formatting
+- Add command to search the entire vault and automatically perform replacement on any matching text found in any file
+- Add exclusion functionality so that text found within code blocks (or YAML frontmatter) is excluded from replacement
+- Add optional setting to disable automatic global insertion for RegEx flags
+- Add ability to have multiple pattern-replacement pairs specified in the settings
+- Add search functionality for the entire active document instead of the current active line of the note
