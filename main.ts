@@ -2,80 +2,125 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
-	mySetting: string;
+interface WindchillPluginSettings {
+	enableLiveUpdate: boolean;
+	excludeCodeAndYaml: boolean;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+const DEFAULT_SETTINGS: WindchillPluginSettings = {
+	enableLiveUpdate: true,
+	excludeCodeAndYaml: true,
+};
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class WindchillLinker extends Plugin {
+	settings: WindchillPluginSettings;
 
 	async onload() {
+		console.log("WindchillLinker plugin loaded");
+
 		await this.loadSettings();
+		this.addSettingTab(new SettingTab(this.app, this));
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (_evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
+		this.registerMarkdownPostProcessor((el) => {
+			const links = el.querySelectorAll('a.external-link');
+			Array.from(links).forEach((link) => {
+				if (link.getAttribute("href")?.startsWith("https://plm.bsci.bossci.com")) {
+					link.classList.add("windchill-link");
 				}
+			});
+		});
+
+		this.addCommand({
+			id: "convert-all-wc-links",
+			name: "Convert WC:######## links in all notes",
+			callback: async () => {
+				const files = this.app.vault.getMarkdownFiles();
+				const linkRegex = /(?<!\[)WC:(\d{8})(?!\]\()/g;
+
+				for (const file of files) {
+					let content = await this.app.vault.read(file);
+					if (this.settings.excludeCodeAndYaml) {
+						content = this.convertExcludingBlocks(content, linkRegex);
+					} else {
+						content = content.replace(linkRegex, (match, num) =>
+							`[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`
+						);
+					}
+					await this.app.vault.modify(file, content);
+				}
+				new Notice("Windchill links converted in all notes.");
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		const WC_UNLINKED_REGEX = /(?<!\[)WC:(\d{8})(?!\]\()/g;
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
+		// Manual conversion command
+		this.addCommand({
+			id: "convert-wc-links",
+			name: "Convert WC:######## to Markdown Links",
+			editorCallback: (editor) => {
+				const content = editor.getValue();
+
+				const updated = content.replace(WC_UNLINKED_REGEX, (match, num) => {
+					return `[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`;
+				});
+
+				editor.setValue(updated);
+			},
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		let isUpdating = false;
+
+		this.registerEvent(
+			this.app.workspace.on("editor-change", (editor) => {
+				if (!editor || isUpdating) return;
+
+				const cursor = editor.getCursor();
+				const line = editor.getLine(cursor.line);
+
+				const updatedLine = line.replace(WC_UNLINKED_REGEX, (match, num) => {
+					return `[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`;
+				});
+
+				if (updatedLine !== line) {
+					isUpdating = true;
+					editor.setLine(cursor.line, updatedLine);
+					isUpdating = false;
+				}
+			})
+		);
+	}
+
+	convertExcludingBlocks(content: string, regex: RegExp): string {
+		const blocks: { start: number; end: number }[] = [];
+
+		// Find YAML frontmatter
+		const yamlMatch = /^---\n([\s\S]*?)\n---/.exec(content);
+		if (yamlMatch) {
+			blocks.push({ start: 0, end: yamlMatch[0].length });
+		}
+
+		// Find code blocks
+		const codeBlockRegex = /```[\s\S]*?```/g;
+		let codeMatch;
+		while ((codeMatch = codeBlockRegex.exec(content)) !== null) {
+			blocks.push({ start: codeMatch.index, end: codeMatch.index + codeMatch[0].length });
+		}
+
+		// Find inline code
+		const inlineCodeRegex = /`[^`]*`/g;
+		let inlineMatch;
+		while ((inlineMatch = inlineCodeRegex.exec(content)) !== null) {
+			blocks.push({ start: inlineMatch.index, end: inlineMatch.index + inlineMatch[0].length });
+		}
+
+		// Replace only outside blocks
+		return content.replace(regex, (match, num, offset) => {
+			if (blocks.some(block => offset >= block.start && offset < block.end)) {
+				return match;
+			}
+			return `[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`;
+		});
 	}
 
 	onunload() {
@@ -91,44 +136,38 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+class SettingTab extends PluginSettingTab {
+	plugin: WindchillLinker;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: WindchillLinker) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
+		containerEl.createEl("h2", { text: "Windchill Linker Settings" });
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Live editor updates")
+			.setDesc("Automatically convert WC:######## as you type")
+			.addToggle(toggle =>
+				toggle.setValue(this.plugin.settings.enableLiveUpdate)
+					.onChange(async (value) => {
+						this.plugin.settings.enableLiveUpdate = value;
+						await this.plugin.saveSettings();
+					}));
+
+		new Setting(containerEl)
+			.setName("Exclude code blocks / YAML")
+			.setDesc("Ignore WC references in YAML, fenced code, and inline code")
+			.addToggle(toggle =>
+				toggle.setValue(this.plugin.settings.excludeCodeAndYaml)
+					.onChange(async (value) => {
+						this.plugin.settings.excludeCodeAndYaml = value;
+						await this.plugin.saveSettings();
+					}));
 	}
 }
