@@ -140,7 +140,7 @@ export default class LiveRegexReplace extends Plugin {
 		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
 			.filter((f) => "gimsuy".includes(f))
 			.join("");
-		const flags = cleanedFlags.includes("g") ? cleanedFlags : cleanedFlags + "g";
+		const flags = (this.settings.requireGlobalFlag) ? (cleanedFlags.includes("g") ? cleanedFlags : cleanedFlags + "g") : cleanedFlags;
 
 		try {
 			this.compiledRe = new RegExp(this.settings.regexPattern, flags);
@@ -217,13 +217,26 @@ class RegexReplaceSettingTab extends PluginSettingTab {
 
 			new Setting(containerEl)
 				.setName("Regular Expression Flags")
-				.setDesc("Valid: g i m s u y (g is always enforced)")
+				.setDesc("Valid: g i m s u y")
 				.addText( (t) => {
 					t.setValue(this.plugin.settings.flags)
 						.onChange(async (v) => {
 							this.plugin.settings.flags = v.replace(/[^gimsuy]/g, "");
 							await this.plugin.saveSettings();
 							this.plugin.compileRegex();
+						})
+				});
+
+			new Setting(containerEl)
+				.setName("Require global RegEx flag")
+				.setDesc("Toggle to always ensure the global RegEx flag (g) is included in the list of flags")
+				.addToggle( (toggle) => {
+					toggle.setValue(this.plugin.settings.requireGlobalFlag)
+						.onChange(async (v) => {
+							this.plugin.settings.requireGlobalFlag = v;
+							await this.plugin.saveSettings();
+							this.plugin.compileRegex();
+							this.display();
 						})
 				});
 
