@@ -1,6 +1,6 @@
 ---
 Author: Mike Harris
-Version: 0.1.2
+Version: 0.1.3
 Github: https://github.com/GlacialDrift/live-regex-replace
 ---
 
