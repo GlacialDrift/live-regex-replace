@@ -1,25 +1,34 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {App, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
 interface WindchillPluginSettings {
 	enableLiveUpdate: boolean;
-	excludeCodeAndYaml: boolean;
+	regexPattern: string;
+	flags: string;
+	replacement: string;
+	advancedToggle: boolean;
 }
 
 const DEFAULT_SETTINGS: WindchillPluginSettings = {
 	enableLiveUpdate: true,
-	excludeCodeAndYaml: true,
+	regexPattern: "(?<!\\[)WC:(\\d{8})(?!]\\()",
+	flags: "g",
+	advancedToggle: false,
+	replacement: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"
 };
 
 export default class WindchillLinker extends Plugin {
-	settings: WindchillPluginSettings;
+	settings!: WindchillPluginSettings;
+	private compiledRe: RegExp | null = null;
+	private isUpdating = false;
 
 	async onload() {
 		console.log("WindchillLinker plugin loaded");
 
 		await this.loadSettings();
 		this.addSettingTab(new SettingTab(this.app, this));
+		this.compileRegex();
 
 		/*
 		this.registerMarkdownPostProcessor((el) => {
@@ -56,25 +65,21 @@ export default class WindchillLinker extends Plugin {
 		});
 		 */
 
-		const WC_UNLINKED_REGEX = /(?<!\[)WC:(\d{8})(?!]\()/g;
-
-		let isUpdating = false;
-
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor) => {
-				if (!editor || isUpdating) return;
+				if (!editor || this.isUpdating || !this.compiledRe) return;
 
+				const re = this.compiledRe;
 				const cursor = editor.getCursor();
-				const line = editor.getLine(cursor.line);
+				const text = editor.getLine(cursor.line);
 
-				const updatedLine = line.replace(WC_UNLINKED_REGEX, (match, num) => {
-					return `[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`;
-				});
+				// Use string replacement so $1, $& work from user input
+				const updated = text.replace(re, this.settings.replacement);
 
-				if (updatedLine !== line) {
-					isUpdating = true;
-					editor.setLine(cursor.line, updatedLine);
-					isUpdating = false;
+				if (updated !== text) {
+					this.isUpdating = true;
+					editor.setLine(cursor.line, updated);
+					this.isUpdating = false;
 				}
 			})
 		);
@@ -125,6 +130,21 @@ export default class WindchillLinker extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+	compileRegex() {
+		// Always include 'g'; allow i/m/u/s/y as user chooses
+		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
+			.filter((f) => "gimsuy".includes(f))
+			.join("");
+		const flags = cleanedFlags.includes("g") ? cleanedFlags : cleanedFlags + "g";
+
+		try {
+			this.compiledRe = new RegExp(this.settings.regexPattern, flags);
+		} catch (e) {
+			this.compiledRe = null;
+			new Notice(`Invalid RegExp: ${(e as Error).message}`);
+		}
+	}
 }
 
 class SettingTab extends PluginSettingTab {
@@ -139,7 +159,7 @@ class SettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
-		containerEl.createEl("h2", { text: "Windchill Linker Settings" });
+		containerEl.createEl("h3", { text: "Windchill Linker Settings" });
 
 		new Setting(containerEl)
 			.setName("Live editor updates")
@@ -152,13 +172,68 @@ class SettingTab extends PluginSettingTab {
 					}));
 
 		new Setting(containerEl)
-			.setName("Exclude code blocks / YAML")
-			.setDesc("Ignore WC references in YAML, fenced code, and inline code")
-			.addToggle(toggle =>
-				toggle.setValue(this.plugin.settings.excludeCodeAndYaml)
+			.setName("Show Advanced Settings")
+			.addToggle(toggle =>{
+				toggle.setValue(this.plugin.settings.advancedToggle)
 					.onChange(async (value) => {
-						this.plugin.settings.excludeCodeAndYaml = value;
+						this.plugin.settings.advancedToggle = value;
 						await this.plugin.saveSettings();
-					}));
+						this.display();
+					})
+			});
+
+		if(this.plugin.settings.advancedToggle){
+			containerEl.createEl("h3", {text: "Regular Expression Settings. DO NOT CHANGE without knowing Regular Expressions"});
+
+			new Setting(containerEl)
+				.setName("Reset Regular Expressions")
+				.setDesc("Reset below values to default settings")
+				.addButton( (but) =>{
+					but
+						.setButtonText("Reset")
+						.onClick( async () =>{
+							this.plugin.settings = {... DEFAULT_SETTINGS};
+							await this.plugin.saveSettings();
+							this.plugin.compileRegex();
+							this.plugin.settings.advancedToggle = true;
+							this.display();
+						})
+				});
+
+			new Setting(containerEl)
+				.setName("Match Pattern (Regular Expression)")
+				.setDesc("Regular Expression pattern to find. No slashes. Capture groups allowed (e.g. (\\d{8}).")
+				.addText( (t) => {
+					t.setValue(this.plugin.settings.regexPattern)
+						.onChange(async (v) => {
+							this.plugin.settings.regexPattern = v;
+							await this.plugin.saveSettings();
+							this.plugin.compileRegex();
+						})
+				});
+
+			new Setting(containerEl)
+				.setName("Regular Expression Flags")
+				.setDesc("Valid: g i m s u y (g is always enforced)")
+				.addText( (t) => {
+					t.setValue(this.plugin.settings.flags)
+						.onChange(async (v) => {
+							this.plugin.settings.flags = v.replace(/[^gimsuy]/g, "");
+							await this.plugin.saveSettings();
+							this.plugin.compileRegex();
+						})
+				});
+
+			new Setting(containerEl)
+				.setName("Replacement Text")
+				.setDesc("Enter the text that will replace the matched pattern. Use $1, $2, $3... for matched groups and $& for the whole match.")
+				.addText( (t) => {
+					t.setValue(this.plugin.settings.replacement)
+						.onChange(async (v) => {
+							this.plugin.settings.replacement = v;
+							await this.plugin.saveSettings();
+						})
+				});
+		}
 	}
 }
