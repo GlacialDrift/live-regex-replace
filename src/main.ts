@@ -164,7 +164,7 @@ class RegexReplaceSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Live editor updates")
-			.setDesc("Automatically convert WC:######## as you type")
+			.setDesc("Automatically convert matched pattern (e.g. WC:########) with replacement text (e.g. hyperlink) as you type.")
 			.addToggle(toggle =>
 				toggle.setValue(this.plugin.settings.enableLiveUpdate)
 					.onChange(async (value) => {
