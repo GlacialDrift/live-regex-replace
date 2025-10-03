@@ -1,7 +1,7 @@
 ---
 Author: Mike Harris
 Version: 0.1.0
-Github: https://github.com/GlacialDrift/windchill-linker/tree/master
+Github: https://github.com/GlacialDrift/live-regex-replace
 ---
 
 # Live Regex Replace

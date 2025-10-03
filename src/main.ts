@@ -1,7 +1,7 @@
 import {App, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 
 
-interface WindchillPluginSettings {
+interface RegexReplaceSettings {
 	enableLiveUpdate: boolean;
 	regexPattern: string;
 	flags: string;
@@ -9,7 +9,7 @@ interface WindchillPluginSettings {
 	advancedToggle: boolean;
 }
 
-const DEFAULT_SETTINGS: WindchillPluginSettings = {
+const DEFAULT_SETTINGS: RegexReplaceSettings = {
 	enableLiveUpdate: true,
 	regexPattern: "(?<!\\[)WC:(\\d{8})(?!]\\()",
 	flags: "g",
@@ -17,15 +17,15 @@ const DEFAULT_SETTINGS: WindchillPluginSettings = {
 	replacement: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"
 };
 
-export default class WindchillLinker extends Plugin {
-	settings!: WindchillPluginSettings;
+export default class LiveRegexReplace extends Plugin {
+	settings!: RegexReplaceSettings;
 	private compiledRe: RegExp | null = null;
 	private isUpdating = false;
 
 	async onload() {
 
 		await this.loadSettings();
-		this.addSettingTab(new SettingTab(this.app, this));
+		this.addSettingTab(new RegexReplaceSettingTab(this.app, this));
 		this.compileRegex();
 
 		/* Removed Markdown Post Processor. Only purpose was to color the hyperlinks differently
@@ -149,10 +149,10 @@ export default class WindchillLinker extends Plugin {
 	}
 }
 
-class SettingTab extends PluginSettingTab {
-	plugin: WindchillLinker;
+class RegexReplaceSettingTab extends PluginSettingTab {
+	plugin: LiveRegexReplace;
 
-	constructor(app: App, plugin: WindchillLinker) {
+	constructor(app: App, plugin: LiveRegexReplace) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

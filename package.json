@@ -1,7 +1,7 @@
 {
-	"name": "windchill-linker",
-	"version": "0.1.0",
-	"description": "This is a plugin designed to actively replace text with a hyperlink to an associated webpage.",
+	"name": "live-regex-replace",
+	"version": "0.1.1",
+	"description": "Auto replaces matched regex pattern with a designated replacement string. Useful for automatically hyperlinking text.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

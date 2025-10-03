@@ -1,11 +1,11 @@
 {
-	"id": "windchill-linker",
-	"name": "Windchill Document Hyperlinker",
-	"version": "0.1.0",
+	"id": "live-regex-replace",
+	"name": "Live Regex Replace",
+	"version": "0.1.1",
 	"minAppVersion": "1.9.14",
-	"description": "Auto-links WC:######## to Windchill documents",
+	"description": "Auto replaces matched regex pattern with a designated replacement string. Useful for automatically hyperlinking text.",
 	"author": "Mike Harris",
-	"authorUrl": "https://github.com/GlacialDrift/windchill-linker",
+	"authorUrl": "https://github.com/GlacialDrift/live-regex-replace",
 	"main": "main.js",
 	"styles": "styles.css",
 	"isDesktopOnly": true
