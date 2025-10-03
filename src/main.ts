@@ -7,6 +7,7 @@ interface RegexReplaceSettings {
 	flags: string;
 	replacement: string;
 	advancedToggle: boolean;
+	requireGlobalFlag: boolean;
 }
 
 const DEFAULT_SETTINGS: RegexReplaceSettings = {
@@ -14,7 +15,8 @@ const DEFAULT_SETTINGS: RegexReplaceSettings = {
 	regexPattern: "(?<!\\[)WC:(\\d{8})(?!]\\()",
 	flags: "g",
 	advancedToggle: false,
-	replacement: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"
+	replacement: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)",
+	requireGlobalFlag: true
 };
 
 export default class LiveRegexReplace extends Plugin {
