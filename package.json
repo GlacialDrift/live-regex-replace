@@ -1,6 +1,6 @@
 {
 	"name": "windchill-linker",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"description": "This is a plugin designed to actively replace text with a hyperlink to an associated webpage.",
 	"main": "main.js",
 	"scripts": {
