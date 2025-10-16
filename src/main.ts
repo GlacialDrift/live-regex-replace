@@ -12,6 +12,7 @@ export default class LiveRegexReplace extends Plugin {
 		this.addSettingTab(new RegexReplaceSettingsTab(this.app, this));
 		this.compileRegex();
 
+		/*
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor) => {
 				if (!editor || this.isUpdating || !this.compiledRe || !this.settings.enableLiveUpdate) return;
@@ -30,6 +31,8 @@ export default class LiveRegexReplace extends Plugin {
 				}
 			})
 		);
+
+		 */
 	}
 
 	onunload() {}
@@ -43,6 +46,7 @@ export default class LiveRegexReplace extends Plugin {
 	}
 
 	compileRegex() {
+		/*
 		// Always include 'g'; allow i/m/u/s/y as user chooses
 		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
 			.filter((f) => "gimsuy".includes(f))
@@ -55,6 +59,8 @@ export default class LiveRegexReplace extends Plugin {
 			this.compiledRe = null;
 			new Notice(`Invalid RegExp: ${(e as Error).message}`);
 		}
+
+		 */
 	}
 
 	/* Removed Exclude Block compatibility. Wasn't working as intended. Needs fixing

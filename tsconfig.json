@@ -10,7 +10,7 @@
 		"strictFunctionTypes": true,
 		"noImplicitAny": true,
 		"noImplicitReturns": true,
-		"noUnusedLocals": true,
+		"noUnusedLocals": false,
 		"moduleResolution": "node",
 		"importHelpers": true,
 		"downlevelIteration": true,
