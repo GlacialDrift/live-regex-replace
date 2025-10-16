@@ -215,6 +215,18 @@ class RegexReplaceSettingTab extends PluginSettingTab {
 						})
 				});
 
+
+			new Setting(containerEl)
+				.setName("Replacement Text")
+				.setDesc("Enter the text that will replace the matched pattern. Use $1, $2, $3... for matched groups and $& for the whole match.")
+				.addText( (t) => {
+					t.setValue(this.plugin.settings.replacement)
+						.onChange(async (v) => {
+							this.plugin.settings.replacement = v;
+							await this.plugin.saveSettings();
+						})
+				});
+
 			new Setting(containerEl)
 				.setName("Regular Expression Flags")
 				.setDesc("Valid: g i m s u y")
@@ -237,17 +249,6 @@ class RegexReplaceSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 							this.plugin.compileRegex();
 							this.display();
-						})
-				});
-
-			new Setting(containerEl)
-				.setName("Replacement Text")
-				.setDesc("Enter the text that will replace the matched pattern. Use $1, $2, $3... for matched groups and $& for the whole match.")
-				.addText( (t) => {
-					t.setValue(this.plugin.settings.replacement)
-						.onChange(async (v) => {
-							this.plugin.settings.replacement = v;
-							await this.plugin.saveSettings();
 						})
 				});
 		}
