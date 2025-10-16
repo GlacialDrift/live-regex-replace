@@ -1,23 +1,5 @@
-import {App, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
-
-
-interface RegexReplaceSettings {
-	enableLiveUpdate: boolean;
-	regexPattern: string;
-	flags: string;
-	replacement: string;
-	advancedToggle: boolean;
-	requireGlobalFlag: boolean;
-}
-
-const DEFAULT_SETTINGS: RegexReplaceSettings = {
-	enableLiveUpdate: true,
-	regexPattern: "(?<!\\[)WC:(\\d{8})(?!]\\()",
-	flags: "g",
-	advancedToggle: false,
-	replacement: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)",
-	requireGlobalFlag: true
-};
+import {Notice, Plugin,} from 'obsidian';
+import {RegexReplaceSettings, RegexReplaceSettingsTab, DEFAULT_SETTINGS} from "./settings";
 
 export default class LiveRegexReplace extends Plugin {
 	settings!: RegexReplaceSettings;
@@ -27,45 +9,8 @@ export default class LiveRegexReplace extends Plugin {
 	async onload() {
 
 		await this.loadSettings();
-		this.addSettingTab(new RegexReplaceSettingTab(this.app, this));
+		this.addSettingTab(new RegexReplaceSettingsTab(this.app, this));
 		this.compileRegex();
-
-		/* Removed Markdown Post Processor. Only purpose was to color the hyperlinks differently
-		 * May re-visit this in the future and add user-customizable hyperlink color.
-		this.registerMarkdownPostProcessor((el) => {
-			const links = el.querySelectorAll('a.external-link');
-			Array.from(links).forEach((link) => {
-				if (link.getAttribute("href")?.startsWith("https://plm.bsci.bossci.com")) {
-					link.classList.add("windchill-link");
-				}
-			});
-		});
-		 */
-
-		/* Removed command. Originally used during development testing
-		 * May revisit in the future for user-initiated vault-wide link replacement
-		this.addCommand({
-			id: "convert-all-wc-links",
-			name: "Convert WC:######## links in all notes",
-			callback: async () => {
-				const files = this.app.vault.getMarkdownFiles();
-				const linkRegex = /(?<!\[)WC:(\d{8})(?!\]\()/g;
-
-				for (const file of files) {
-					let content = await this.app.vault.read(file);
-					if (this.settings.excludeCodeAndYaml) {
-						content = this.convertExcludingBlocks(content, linkRegex);
-					} else {
-						content = content.replace(linkRegex, (match, num) =>
-							`[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`
-						);
-					}
-					await this.app.vault.modify(file, content);
-				}
-				new Notice("Windchill links converted in all notes.");
-			}
-		});
-		 */
 
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor) => {
@@ -85,6 +30,31 @@ export default class LiveRegexReplace extends Plugin {
 				}
 			})
 		);
+	}
+
+	onunload() {}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
+
+	compileRegex() {
+		// Always include 'g'; allow i/m/u/s/y as user chooses
+		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
+			.filter((f) => "gimsuy".includes(f))
+			.join("");
+		const flags = (this.settings.requireGlobalFlag) ? (cleanedFlags.includes("g") ? cleanedFlags : cleanedFlags + "g") : cleanedFlags;
+
+		try {
+			this.compiledRe = new RegExp(this.settings.regexPattern, flags);
+		} catch (e) {
+			this.compiledRe = null;
+			new Notice(`Invalid RegExp: ${(e as Error).message}`);
+		}
 	}
 
 	/* Removed Exclude Block compatibility. Wasn't working as intended. Needs fixing
@@ -123,134 +93,42 @@ export default class LiveRegexReplace extends Plugin {
 	}
 	 */
 
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-
-	compileRegex() {
-		// Always include 'g'; allow i/m/u/s/y as user chooses
-		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
-			.filter((f) => "gimsuy".includes(f))
-			.join("");
-		const flags = (this.settings.requireGlobalFlag) ? (cleanedFlags.includes("g") ? cleanedFlags : cleanedFlags + "g") : cleanedFlags;
-
-		try {
-			this.compiledRe = new RegExp(this.settings.regexPattern, flags);
-		} catch (e) {
-			this.compiledRe = null;
-			new Notice(`Invalid RegExp: ${(e as Error).message}`);
-		}
-	}
-}
-
-class RegexReplaceSettingTab extends PluginSettingTab {
-	plugin: LiveRegexReplace;
-
-	constructor(app: App, plugin: LiveRegexReplace) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName("Live editor updates")
-			.setDesc("Automatically convert matched pattern (e.g. WC:########) with replacement text (e.g. hyperlink) as you type.")
-			.addToggle(toggle =>
-				toggle.setValue(this.plugin.settings.enableLiveUpdate)
-					.onChange(async (value) => {
-						this.plugin.settings.enableLiveUpdate = value;
-						await this.plugin.saveSettings();
-					}));
-
-		new Setting(containerEl)
-			.setName("Show advanced Settings")
-			.addToggle(toggle =>{
-				toggle.setValue(this.plugin.settings.advancedToggle)
-					.onChange(async (value) => {
-						this.plugin.settings.advancedToggle = value;
-						await this.plugin.saveSettings();
-						this.display();
-					})
+	/* Removed Markdown Post Processor. Only purpose was to color the hyperlinks differently
+		 * May re-visit this in the future and add user-customizable hyperlink color.
+		this.registerMarkdownPostProcessor((el) => {
+			const links = el.querySelectorAll('a.external-link');
+			Array.from(links).forEach((link) => {
+				if (link.getAttribute("href")?.startsWith("https://plm.bsci.bossci.com")) {
+					link.classList.add("windchill-link");
+				}
 			});
+		});
+		 */
 
-		if(this.plugin.settings.advancedToggle){
-			new Setting(containerEl).setName("Regular Expression Settings. DO NOT CHANGE without knowing Regular Expressions").setHeading();
+	/* Removed command. Originally used during development testing
+	 * May revisit in the future for user-initiated vault-wide link replacement
+	this.addCommand({
+		id: "convert-all-wc-links",
+		name: "Convert WC:######## links in all notes",
+		callback: async () => {
+			const files = this.app.vault.getMarkdownFiles();
+			const linkRegex = /(?<!\[)WC:(\d{8})(?!\]\()/g;
 
-			new Setting(containerEl)
-				.setName("Reset Regular Expressions")
-				.setDesc("Reset below values to default settings")
-				.addButton( (but) =>{
-					but
-						.setButtonText("Reset")
-						.onClick( async () =>{
-							this.plugin.settings = {... DEFAULT_SETTINGS};
-							await this.plugin.saveSettings();
-							this.plugin.compileRegex();
-							this.plugin.settings.advancedToggle = true;
-							this.display();
-						})
-				});
-
-			new Setting(containerEl)
-				.setName("Match Pattern (Regular Expression)")
-				.setDesc("Regular Expression pattern to find. No slashes. Capture groups allowed (e.g. (\\d{8}).")
-				.addText( (t) => {
-					t.setValue(this.plugin.settings.regexPattern)
-						.onChange(async (v) => {
-							this.plugin.settings.regexPattern = v;
-							await this.plugin.saveSettings();
-							this.plugin.compileRegex();
-						})
-				});
-
-
-			new Setting(containerEl)
-				.setName("Replacement Text")
-				.setDesc("Enter the text that will replace the matched pattern. Use $1, $2, $3... for matched groups and $& for the whole match.")
-				.addText( (t) => {
-					t.setValue(this.plugin.settings.replacement)
-						.onChange(async (v) => {
-							this.plugin.settings.replacement = v;
-							await this.plugin.saveSettings();
-						})
-				});
-
-			new Setting(containerEl)
-				.setName("Regular Expression Flags")
-				.setDesc("Valid: g i m s u y")
-				.addText( (t) => {
-					t.setValue(this.plugin.settings.flags)
-						.onChange(async (v) => {
-							this.plugin.settings.flags = v.replace(/[^gimsuy]/g, "");
-							await this.plugin.saveSettings();
-							this.plugin.compileRegex();
-						})
-				});
-
-			new Setting(containerEl)
-				.setName("Require global RegEx flag")
-				.setDesc("Toggle to always ensure the global RegEx flag (g) is included in the list of flags")
-				.addToggle( (toggle) => {
-					toggle.setValue(this.plugin.settings.requireGlobalFlag)
-						.onChange(async (v) => {
-							this.plugin.settings.requireGlobalFlag = v;
-							await this.plugin.saveSettings();
-							this.plugin.compileRegex();
-							this.display();
-						})
-				});
+			for (const file of files) {
+				let content = await this.app.vault.read(file);
+				if (this.settings.excludeCodeAndYaml) {
+					content = this.convertExcludingBlocks(content, linkRegex);
+				} else {
+					content = content.replace(linkRegex, (match, num) =>
+						`[WC:${num}](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=${num})`
+					);
+				}
+				await this.app.vault.modify(file, content);
+			}
+			new Notice("Windchill links converted in all notes.");
 		}
-	}
+	});
+	 */
+
+
 }

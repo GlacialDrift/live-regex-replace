@@ -68,7 +68,6 @@ this roadmap lays out some possible future changes, no future updates are guaran
 | 2025-10-03  | Add a markdown post-processor to include CSS classes in replaced text for optional CSS formatting                                                                                       |
 | 2025-10-03  | Add command to search the entire vault and automatically perform replacement on any matching text found in any file                                                                     |
 | 2025-10-03  | Add exclusion functionality so that text found within code blocks (or YAML frontmatter) is excluded from replacement                                                                    |
-| 2025-10-03  | Add optional setting to disable automatic global insertion for RegEx flags                                                                                                              |
 | 2025-10-03  | Add ability to have multiple pattern-replacement pairs specified in the settings                                                                                                        |
 | 2025-10-03  | Add search functionality for the entire active document instead of the current active line of the note                                                                                  |
 | 2025-10-03  | Add Save-Settings and Load-Settings feature that saves the current settings to JSON file and allows loading of other settings JSON files (useful for experimenting with Regex Patterns) |
