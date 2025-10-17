@@ -1,17 +1,79 @@
 import {Notice, Plugin} from 'obsidian';
 import {RegexReplaceSettings, RegexReplaceSettingsTab, DEFAULT_SETTINGS} from "./settings";
 
+/**
+ * LiveRegexReplace
+ *
+ * @remarks
+ * Obsidian plugin that performs **live, line-scoped** regular-expression replacements
+ * as the user edits. When enabled, each `editor-change` event triggers evaluation of
+ * the current line against the configured pattern list and applies replacements
+ * in-place. Patterns are compiled with user-specified flags; a global flag can be
+ * enforced via settings.
+ *
+ * This plugin is intentionally conservative: it only rewrites the **current line**
+ * to reduce surprise and accidental large edits. It also guards against
+ * self-triggered update loops via an `isUpdating` flag.
+ *
+ * @example
+ * ```ts
+ * // Typical lifecycle: Obsidian calls onload(), which:
+ * // 1) loads settings,
+ * // 2) installs the settings tab,
+ * // 3) compiles patterns,
+ * // 4) registers the editor-change listener.
+ * ```
+ *
+ * @public
+ */
 export default class LiveRegexReplace extends Plugin {
+
+	/**
+	 * User-configurable settings loaded from disk and edited via the settings tab.
+	 * Must be populated by {@link loadSettings} before use.
+	 */
 	settings!: RegexReplaceSettings;
+
+	/**
+	 * Cache of compiled regular expressions, kept in the same order as
+	 * {@link RegexReplaceSettings.regex_patterns}. Set to `null` when no patterns
+	 * are configured or when compilation fails.
+	 *
+	 * @private
+	 */
 	private compiledRe: Array<RegExp> | null = null;
+
+	/**
+	 * Reentrancy guard used to avoid recursive `editor-change` handling when the
+	 * plugin programmatically updates the editor content.
+	 *
+	 * @private
+	 */
 	private isUpdating = false;
 
+	/**
+	 * Obsidian lifecycle entrypoint.
+	 *
+	 * @remarks
+	 * - Loads persisted settings and installs the settings tab UI.
+	 * - Compiles regex patterns based on current settings.
+	 * - Registers an `editor-change` listener that:
+	 *   - Skips if the editor is unavailable, a self-update is in progress,
+	 *     compiled patterns are missing, or live update is disabled.
+	 *   - Reads the current line, applies each compiled pattern's replacement,
+	 *     and writes back the updated line if it changed.
+	 *
+	 * @internalRemarks
+	 * Listener operates on the current cursor line only. It relies on a stable
+	 * index alignment between `compiledRe[index]` and `settings.regex_patterns[index]`.
+	 * Ensure any settings mutations that reorder patterns are followed by
+	 * {@link compileRegex}.
+	 */
 	async onload() {
 
 		await this.loadSettings();
 		this.addSettingTab(new RegexReplaceSettingsTab(this.app, this));
 		this.compileRegex();
-
 
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor) => {
@@ -21,7 +83,6 @@ export default class LiveRegexReplace extends Plugin {
 				const cursor = editor.getCursor();
 				const text = editor.getLine(cursor.line);
 
-				// Use string replacement so $1, $& work from user input
 				re.forEach(
 					(regexPattern, index) =>{
 						const updated = text.replace(regexPattern, this.settings.regex_patterns[index].regexReplace)
@@ -36,16 +97,54 @@ export default class LiveRegexReplace extends Plugin {
 		);
 	}
 
+	/**
+	 * Obsidian lifecycle exitpoint.
+	 *
+	 * @remarks
+	 * Currently a no-op. Included for completeness and future cleanup hooks.
+	 */
 	onunload() {}
 
+	/**
+	 * Loads persisted plugin settings from disk and applies defaults for any
+	 * missing fields.
+	 *
+	 * @remarks
+	 * Uses Obsidian's {@link Plugin.loadData} under the hood and merges with
+	 * {@link DEFAULT_SETTINGS}. Must be called before accessing {@link settings}.
+	 *
+	 * @returns A promise that resolves when settings are loaded.
+	 */
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
+	/**
+	 * Persists current settings to disk.
+	 *
+	 * @remarks
+	 * Uses Obsidian's {@link Plugin.saveData}. Does not recompile patterns; call
+	 * {@link compileRegex} after changing fields that affect regex behavior.
+	 *
+	 * @returns A promise that resolves when settings are saved.
+	 */
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
 
+	/**
+	 * Compiles the configured find-patterns into `RegExp` instances using the
+	 * user-specified flags. Optionally enforces the global (`g`) flag based on
+	 * {@link RegexReplaceSettings.requireGlobalFlag}.
+	 *
+	 * @remarks
+	 * - Deduplicates and filters flags to the supported set `gimsuy`.
+	 * - When no patterns are configured, sets {@link compiledRe} to `null`.
+	 * - On compilation error (invalid pattern), clears {@link compiledRe} and
+	 *   shows an Obsidian {@link Notice} with the error message.
+	 *
+	 * @sideEffects Updates {@link compiledRe}; triggers a visual notice on error.
+	 */
 	compileRegex() {
 		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
 			.filter((f) => "gimsuy".includes(f))
@@ -68,6 +167,15 @@ export default class LiveRegexReplace extends Plugin {
 			new Notice(`Invalid RegExp: ${(e as Error).message}`);
 		}
 	}
+
+	  /*
+	   * Historical/disabled features preserved for future reference:
+	   * - convertExcludingBlocks(): vault-wide replacements with YAML/code exclusion (needs fixes).
+	   * - Markdown post-processor: color external links to Windchill differently.
+	   * - Command: vault-wide "WC:########" link conversion.
+	   *
+	   * When revisiting, ensure behavior is opt-in and supports dry-run previews.
+	   */
 
 	/* Removed Exclude Block compatibility. Wasn't working as intended. Needs fixing
 	 * May re-visit in the future, but I don't expect/intend users to create hyperlinks
@@ -141,6 +249,4 @@ export default class LiveRegexReplace extends Plugin {
 		}
 	});
 	 */
-
-
 }

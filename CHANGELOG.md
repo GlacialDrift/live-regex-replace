@@ -10,6 +10,7 @@ For all individual changes, see the [Commit History](https://github.com/GlacialD
 - Added "New Pair" button in the settings and delete buttons for each existing pair
 - Added clarity on how to use RegEx Pair fields
 - Added CSS styling for RegEx Pair fields, `styles.css` is now a required file
+- Added documentation to source code
 
 ## Version 0.2.0
 

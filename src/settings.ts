@@ -1,36 +1,131 @@
 import LiveRegexReplace from "./main";
 import {App, PluginSettingTab, Setting} from "obsidian";
 
+/**
+ * Single find/replace rule.
+ *
+ * @remarks
+ * Each entry is rendered as a row of three text inputs in the Settings tab:
+ * 1) human-readable description, 2) find pattern (RegExp source), 3) replacement text.
+ *
+ * `regexFind` should be a valid JavaScript regular expression **source** (without slashes).
+ * Flags are applied globally via plugin settings.
+ */
 export interface RegexPattern {
+
+	/** Human-readable name/description for the rule. */
 	regexDesc: string;
+
+	/** Regular expression **source** used to match (no leading/trailing `/`). */
 	regexFind: string;
+
+	/**
+	 * Replacement string used with `String.prototype.replace`.
+	 *
+	 * @remarks
+	 * Capture groups from {@link regexFind} can be referenced as `$1`, `$2`, etc.
+	 * Remember that `$&` inserts the whole match, `$`` the prefix, and `$'` the suffix.
+	 */
 	regexReplace: string;
 }
 
+
+/**
+ * Persisted user settings for LiveRegexReplace.
+ */
 export interface RegexReplaceSettings {
+
+	/**
+	 * When true, perform live, line-scoped replacements during typing.
+	 * When false, disables the editor-change handler.
+	 */
 	enableLiveUpdate: boolean;
+
+	/**
+	 * String of regex flags applied to every compiled pattern (e.g. `"gim"`).
+	 * Only `g i m s u y` are recognized; others are ignored at compile time.
+	 */
 	flags: string;
+
+	/**
+	 * Reveals advanced settings (regex list and flags UI) in the Settings tab.
+	 * Toggled at runtime and persisted.
+	 */
 	advancedToggle: boolean;
+
+	/**
+	 * If enabled, enforces the `g` (global) flag for all compiled patterns,
+	 * adding it if missing from {@link flags}.
+	 */
 	requireGlobalFlag: boolean;
+
+	/**
+	 * Ordered list of configured find/replace rules.
+	 *
+	 * @remarks
+	 * The index of each entry aligns with the compiled regex array in the main plugin.
+	 * Reordering or deleting entries will affect which replacement string is applied.
+	 */
 	regex_patterns: Array<RegexPattern>;
 }
 
+/**
+ * Default settings applied on first load or when fields are missing.
+ *
+ * @remarks
+ * Ships with a single rule that converts `WC:########` into a Windchill hyperlink.
+ * The default requires a non-bracketed `WC:` token (negative lookbehind) and
+ * avoids matching already-linkified text (negative lookahead).
+ */
 export const DEFAULT_SETTINGS: RegexReplaceSettings = {
 	enableLiveUpdate: true,
 	flags: "g",
 	advancedToggle: false,
 	requireGlobalFlag: true,
-	regex_patterns: [{regexDesc: "Windchill Hyperlinker", regexFind: "(?<!\\[)WC:(\\d{8})(?!]\\()", regexReplace: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"}]
+	regex_patterns: [{
+		regexDesc: "Windchill Hyperlinker",
+		regexFind: "(?<!\\[)WC:(\\d{8})(?!]\\()",
+		regexReplace: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"
+	}]
 };
 
+/**
+ * Settings UI for LiveRegexReplace.
+ *
+ * @remarks
+ * Renders a compact “main” toggle by default. When {@link RegexReplaceSettings.advancedToggle} is enabled,
+ * it exposes:
+ * - Reset button to restore {@link DEFAULT_SETTINGS}
+ * - Regex rule editor (3 text inputs per rule + delete/add)
+ * - Flag controls (`requireGlobalFlag`, raw `flags` string)
+ *
+ * Methods are split for readability; each one renders a section or control cluster.
+ *
+ * @public
+ */
 export class RegexReplaceSettingsTab extends PluginSettingTab {
+
+	/** Owning plugin instance (used to read/write settings and recompile patterns). */
 	plugin: LiveRegexReplace;
 
+	/**
+	 * Constructs the settings tab bound to the given plugin instance.
+	 */
 	constructor(app: App, plugin: LiveRegexReplace) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
+	/**
+	 * Primary render method called by Obsidian.
+	 *
+	 * @remarks
+	 * Clears the container, renders the main toggle and advanced toggle.
+	 * If advanced mode is enabled, renders reset, regex fields, and flag fields.
+	 *
+	 * @sideEffects
+	 * Mutates the DOM within {@link containerEl}.
+	 */
 	display(): void {
 		this.containerEl.empty();
 
@@ -42,6 +137,13 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			this.addFlagFields();
 		}
 	}
+
+	/**
+	 * Renders the master on/off switch for live updates.
+	 *
+	 * @remarks
+	 * Persists {@link RegexReplaceSettings.enableLiveUpdate} immediately on change.
+	 */
 	addMainToggle(): void {
 		new Setting(this.containerEl)
 			.setName("Live editor updates")
@@ -55,6 +157,12 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			});
 	}
 
+	/**
+	 * Renders the “Show advanced Settings” toggle.
+	 *
+	 * @remarks
+	 * Toggling re-renders the entire tab to show/hide advanced sections.
+	 */
 	addAdvancedSettingsToggle(): void {
 		new Setting(this.containerEl)
 			.setName("Show advanced Settings")
@@ -68,6 +176,20 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			});
 	}
 
+	/**
+	 * Renders the advanced section header and a “Reset Regular Expressions” CTA.
+	 *
+	 * @remarks
+	 * Clicking **Reset**:
+	 * - replaces the entire settings object with {@link DEFAULT_SETTINGS},
+	 * - saves settings,
+	 * - recompiles regex patterns,
+	 * - forces advanced mode on,
+	 * - re-renders the tab.
+	 *
+	 * @warning
+	 * This **deletes any custom regex pairs** the user has configured.
+	 */
 	addResetButton(): void {
 		const desc = document.createDocumentFragment();
 		desc.append(
@@ -78,7 +200,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			desc.createEl("code", {text: "WC:########"}),
 			" to be replaced with a hyperlink to that Windchill file. It is recommended that no changes are made to",
 			" the regular expression fields without knowledge of regular expressions."
-			);
+		);
 
 		new Setting(this.containerEl)
 			.setName("Advanced Regular Expression Settings")
@@ -102,6 +224,20 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 					})
 			});
 	}
+
+	/**
+	 * Renders the editable list of regex rules (description, find, replace).
+	 *
+	 * @remarks
+	 * - Each text input persists on change.
+	 * - Editing `regexFind` triggers a recompilation.
+	 * - The delete “cross” removes a rule, persists, recompiles, and re-renders.
+	 * - “Add new RegEx Pair” appends a blank rule, persists, recompiles, and re-renders.
+	 *
+	 * @ui
+	 * The description above the list explains the three-field layout and highlights
+	 * pitfalls like nested linkification when patterns lack proper boundaries.
+	 */
 	addRegexFields(): void {
 		const desc = document.createDocumentFragment();
 
@@ -117,6 +253,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 				" expression has been matched. This replacement text can utilize capture groups from the" +
 				" corresponding regular expression."
 		});
+
 		desc.append(
 			"Below are the fields used to define regular expression patterns, the text to replace them with,",
 			" and a custom description of the regular expression purpose.",
@@ -161,7 +298,6 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 							.onChange(async (value) => {
 								this.plugin.settings.regex_patterns[index].regexReplace = value;
 								await this.plugin.saveSettings();
-								this.plugin.compileRegex();
 							});
 						t.inputEl.classList.add("regex_field");
 					})
@@ -200,6 +336,13 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			});
 	}
 
+	/**
+	 * Renders controls for regex flags and the “require global flag” toggle.
+	 *
+	 * @remarks
+	 * - Recompiles patterns on any change.
+	 * - The free-text flags input is sanitized to `g i m s u y` only.
+	 */
 	addFlagFields(): void {
 		const desc = document.createDocumentFragment();
 		desc.append(
