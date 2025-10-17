@@ -107,8 +107,8 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 
 		const ol = desc.createEl("ol");
 		ol.createEl("li", {text: "The first text field is used for custom naming and descriptions. It can be" +
-				" difficult to remember the purpose of a regular expression replacement. This field allows you to" +
-				" describe what this RegEx replacement is intended to do."
+				" difficult to remember the purpose of a regular expression replacement after some time. This field" +
+				" allows you to describe what this RegEx replacement is intended to do."
 		});
 		ol.createEl("li", {text: "The second text field is used for the match-finding regular expression. This" +
 				" can be any valid regular expression (using JavaScripts regular expression engine)."
