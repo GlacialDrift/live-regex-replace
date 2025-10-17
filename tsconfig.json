@@ -16,6 +16,7 @@
 		"downlevelIteration": true,
 		"isolatedModules": true,
 		"strictNullChecks": true,
+		"strict": true,
 		"lib": [
 			"DOM",
 			"ES5",

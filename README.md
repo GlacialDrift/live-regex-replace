@@ -11,9 +11,12 @@ pattern defined in the plugin settings. If found, the text in your vault is repl
 in the plugin settings. Optionally, the replacement text can contain contents of the matched text using regular expression 
 matching.
 
-This plugin was originally developed to replace `WC:########` with a hyperlink to Windchill webpages for personal use. 
-The plugin was then expanded to be of use to all Boston Scientific employees that use Windchill for ease of note-taking. 
-The plugin was then modified to provide users with customizable regular expression patterns and replacements. 
+### Plugin History & Purpose 
+
+This plugin was originally developed explicitly to replace `WC:########` with a hyperlink to Windchill webpages for 
+personal use. The plugin was shared so that it could be of use to all Boston Scientific employees that use Windchill for ease 
+of note-taking. The plugin was then modified to provide users with customizable regular expression patterns and replacements. 
+Most recently, the ability to have multiple regular expression detection patterns has been added. 
 
 ## License
 
