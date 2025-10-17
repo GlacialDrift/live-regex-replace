@@ -2,6 +2,7 @@ import LiveRegexReplace from "./main";
 import {App, PluginSettingTab, Setting} from "obsidian";
 
 export interface RegexPattern {
+	regexDesc: string;
 	regexFind: string;
 	regexReplace: string;
 }
@@ -19,7 +20,7 @@ export const DEFAULT_SETTINGS: RegexReplaceSettings = {
 	flags: "g",
 	advancedToggle: false,
 	requireGlobalFlag: true,
-	regex_patterns: [{regexFind: "(?<!\\[)WC:(\\d{8})(?!]\\()", regexReplace: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"}]
+	regex_patterns: [{regexDesc: "Windchill Hyperlinker", regexFind: "(?<!\\[)WC:(\\d{8})(?!]\\()", regexReplace: "[WC:$1](https://plm.bsci.bossci.com/Windchill/netmarkets/jsp/bsci/plm/object/searchLatestEffObject.jsp?objNumber=$1)"}]
 };
 
 export class RegexReplaceSettingsTab extends PluginSettingTab {
@@ -86,7 +87,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 
 		new Setting(this.containerEl)
 			.setName("Reset Regular Expressions")
-			.setDesc("Reset below values to default settings")
+			.setDesc("Reset below values to default settings. WARNING: THIS WILL DELETE ANY CUSTOM REGEX PAIRS")
 			.addButton((but) => {
 				but
 					.setButtonText("Reset")
@@ -103,18 +104,31 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 	}
 	addRegexFields(): void {
 		const desc = document.createDocumentFragment();
+
+		const ol = desc.createEl("ol");
+		ol.createEl("li", {text: "The first text field is used for custom naming and descriptions. It can be" +
+				" difficult to remember the purpose of a regular expression replacement. This field allows you to" +
+				" describe what this RegEx replacement is intended to do."
+		});
+		ol.createEl("li", {text: "The second text field is used for the match-finding regular expression. This" +
+				" can be any valid regular expression (using JavaScripts regular expression engine)."
+		});
+		ol.createEl("li", {text: "The third text field is used for the replacement text after the regular" +
+				" expression has been matched. This replacement text can utilize capture groups from the" +
+				" corresponding regular expression."
+		});
 		desc.append(
-			"The first column below represents the regular expression patterns that will be matched. The second",
-			" column below represents the replacement text.",
-			desc.createEl("br"),
-			desc.createEl("br"),
-			"The regular expression can include capture groups (e.g. ",
-			desc.createEl("code", {text: "(\\d{8})"}),
-			"). The replacement text can use those capture groups (e.g. ",
-			desc.createEl("code", {text: "[$1](...)"}),
-			"). Use these fields carefully, as an empty ",
-			desc.createEl("code", {text: "replacement text"}),
-			" field will delete any text matched."
+			"Below are the fields used to define regular expression patterns, the text to replace them with,",
+			" and a custom description of the regular expression purpose.",
+			ol,
+			"Care must be taken in designing the regular expressions and replacements. For example, using a regular expression ",
+			desc.createEl("code", {text: "WC:(\\d{8})"}),
+			" and replacement ",
+			desc.createEl("code", {text: "[WC:$1](hyperlink)"}),
+			" will continually replace the ",
+			desc.createEl("code", {text: "WC:\\d{8}"}),
+			" text with nested hyperlinks. It is therefore highly recommended that well-defined start/end tokens are ",
+			" used or look-ahead and look-behinds are used."
 		);
 
 		new Setting(this.containerEl)
@@ -125,6 +139,14 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 		this.plugin.settings.regex_patterns.forEach(
 			(regexPattern, index) =>{
 				const s = new Setting(this.containerEl)
+					.addText((t) =>{
+						t.setValue(regexPattern.regexDesc)
+							.onChange(async (value) => {
+								this.plugin.settings.regex_patterns[index].regexDesc = value;
+								await this.plugin.saveSettings();
+							});
+						t.inputEl.classList.add("regex_field");
+					})
 					.addText((t) => {
 						t.setValue(regexPattern.regexFind)
 							.onChange(async (value) => {
@@ -167,6 +189,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 					.setCta()
 					.onClick(async () => {
 						this.plugin.settings.regex_patterns.push({
+							regexDesc: "RegEx Description",
 							regexFind: "",
 							regexReplace: "",
 						});
@@ -175,40 +198,13 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 						this.display();
 					});
 			});
-
-		/*
-		new Setting(this.containerEl)
-			.setName("Match Pattern (Regular Expression)")
-			.setDesc("Regular Expression pattern to find. No slashes. Capture groups allowed (e.g. (\\d{8}).")
-			.addText((t) => {
-				t.setValue(this.plugin.settings.regexPattern)
-					.onChange(async (v) => {
-						this.plugin.settings.regexPattern = v;
-						await this.plugin.saveSettings();
-						this.plugin.compileRegex();
-					})
-			});
-
-
-		new Setting(this.containerEl)
-			.setName("Replacement Text")
-			.setDesc("Enter the text that will replace the matched pattern. Use $1, $2, $3... for matched groups and $& for the whole match.")
-			.addText((t) => {
-				t.setValue(this.plugin.settings.replacement)
-					.onChange(async (v) => {
-						this.plugin.settings.replacement = v;
-						await this.plugin.saveSettings();
-					})
-			});
-
-		 */
 	}
 
 	addFlagFields(): void {
 		const desc = document.createDocumentFragment();
 		desc.append(
 			"The settings below allow for modification of the Regular Expression flag rules. If you do not",
-			" recognize 'regular expression flags', you can safely leave these alone and text replacement will work as expected.",
+			" recognize 'regular expression flags', you can leave these alone and text replacement will work as expected.",
 			desc.createEl("br"),
 			desc.createEl("br"),
 			"By default, the global flag is applied to all regular expressions. This can be modified with the setting below."
@@ -220,20 +216,8 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			.setHeading();
 
 		new Setting(this.containerEl)
-			.setName("Regular Expression Flags")
-			.setDesc("Valid: g i m s u y")
-			.addText( (t) => {
-				t.setValue(this.plugin.settings.flags)
-					.onChange(async (v) => {
-						this.plugin.settings.flags = v.replace(/[^gimsuy]/g, "");
-						await this.plugin.saveSettings();
-						this.plugin.compileRegex();
-					})
-			});
-
-		new Setting(this.containerEl)
 			.setName("Require global RegEx flag")
-			.setDesc("Toggle to always ensure the global RegEx flag (g) is included in the list of flags")
+			.setDesc("When the toggle is on, forces the global flag, g, for all compiled regular expressions.")
 			.addToggle( (toggle) => {
 				toggle.setValue(this.plugin.settings.requireGlobalFlag)
 					.onChange(async (v) => {
@@ -241,6 +225,18 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.plugin.compileRegex();
 						this.display();
+					})
+			});
+
+		new Setting(this.containerEl)
+			.setName("Regular Expression Flags")
+			.setDesc("Valid regular expression flags include: g i m s u y")
+			.addText( (t) => {
+				t.setValue(this.plugin.settings.flags)
+					.onChange(async (v) => {
+						this.plugin.settings.flags = v.replace(/[^gimsuy]/g, "");
+						await this.plugin.saveSettings();
+						this.plugin.compileRegex();
 					})
 			});
 	}

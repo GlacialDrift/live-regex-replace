@@ -40,23 +40,24 @@ hyperlink, simply click on the line containing the text and update the line.
 More information about regular expressions is available online. The plugin uses the `replace` function to replace 
 pattern-matched text. Therefore, `replace` -compatible fields are required. My go-to cheat sheet is the [Quick-Start: Regex Cheat Sheet](https://www.rexegg.com/regex-quickstart.php).
 
-#### Regular Expression Pattern
+### Regular Expression Pattern
 
 This is the regular expression used to pattern match text within your Obsidian vault. The default setting uses the 
-following regular expression:
-	`(?<!\[)WC:(\d{8})(?!]\()`
+following regular expression: `(?<!\[)WC:(\d{8})(?!]\()`
 
-#### Regular Expression Flags
-
-Optional regular expression flags to be included with the pattern when compiling the regular expression pattern. 
-The user has the option of setting the global flag to always be included. 
-
-#### Replacement Text
+### Replacement Text
 
 This is the text that will be used to replace the pattern-matched text in the note. This can be a simple string, but 
 it may also include matches from the regular expression match. Use `$1`, `$2`, ... to match groups from the regular 
 expression and `$&` to match the entire pattern. The plugin ships with a hyperlink replacement that links to Windchill 
 documents.
+
+The default setting uses `[WC:$1](hyperlink)`, where hyperlink is a link to the corresponding Windchill document. 
+
+### Regular Expression Flags
+
+Optional regular expression flags to be included with the pattern when compiling the regular expression pattern.
+The user has the option of setting the global flag to always be included.
 
 ## RoadMap
 

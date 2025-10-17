@@ -5,8 +5,8 @@ For all individual changes, see the [Commit History](https://github.com/GlacialD
 ## Version 0.2.1
 
 - Added support for multiple RegEx "pairs" in the settings
-- Each RegEx "pair" consists of a RegEx pattern to be matched and the text it will be replaced with
-- While typing, all RegEx pairs are checked (sequentially on each editor update)
+  - Each RegEx "pair" consists of a User-defined description, a RegEx pattern to be matched and the text it will be replaced with
+  - Updated registered event so that while typing, all RegEx pairs are checked (sequentially on each editor update)
 - Added "New Pair" button in the settings and delete buttons for each existing pair
 - Added clarity on how to use RegEx Pair fields
 - Added CSS styling for RegEx Pair fields, `styles.css` is now a required file
