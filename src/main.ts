@@ -1,4 +1,4 @@
-import {Notice, Plugin,} from 'obsidian';
+import {Notice, Plugin} from 'obsidian';
 import {RegexReplaceSettings, RegexReplaceSettingsTab, DEFAULT_SETTINGS} from "./settings";
 
 export default class LiveRegexReplace extends Plugin {
@@ -47,8 +47,6 @@ export default class LiveRegexReplace extends Plugin {
 	}
 
 	compileRegex() {
-
-		// Always include 'g'; allow i/m/u/s/y as user chooses
 		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
 			.filter((f) => "gimsuy".includes(f))
 			.join("");

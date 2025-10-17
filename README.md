@@ -59,6 +59,10 @@ The default setting uses `[WC:$1](hyperlink)`, where hyperlink is a link to the 
 Optional regular expression flags to be included with the pattern when compiling the regular expression pattern.
 The user has the option of setting the global flag to always be included.
 
+## Changelog
+
+For the full changelog, see `CHANGELOG.md`
+
 ## RoadMap
 
 This plugin was written originally for personal use and expanded to offer generalized functionality. Therefore, while 
