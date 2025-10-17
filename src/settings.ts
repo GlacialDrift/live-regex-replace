@@ -140,7 +140,20 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 								this.plugin.compileRegex();
 							});
 						t.inputEl.classList.add("regex_field");
-					});
+					})
+					.addExtraButton((cb) => {
+						cb.setIcon("cross")
+							.setTooltip("Delete")
+							.onClick(async () => {
+								this.plugin.settings.regex_patterns.splice(
+									index,
+									1
+								);
+								await this.plugin.saveSettings();
+								this.plugin.compileRegex();
+								this.display();
+							});
+					})
 				s.infoEl.remove();
 			}
 		);
