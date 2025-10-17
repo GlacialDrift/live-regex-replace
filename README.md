@@ -35,13 +35,20 @@ Care must be taken in designing the regular expressions and replacements. For ex
 nested hyperlinks as the text field remains unchanged. Therefore, it is recommended that look-behinds and look-aheads are 
 used to prevent cascading replacement. Similarly, it is recommended that start and end tokens are clearly identified.
 
-Currently, the plugin only actively searches the line actively being edited. Therefore, to update existing text with a 
+Currently, the plugin only searches the line actively being edited. Therefore, to update existing text with a 
 hyperlink, simply click on the line containing the text and update the line. 
 
 ## Settings
 
 More information about regular expressions is available online. The plugin uses the `replace` function to replace 
 pattern-matched text. Therefore, `replace` -compatible fields are required. My go-to cheat sheet is the [Quick-Start: Regex Cheat Sheet](https://www.rexegg.com/regex-quickstart.php).
+
+### RegEx "Pairs"
+
+The plugin is designed to be used with user-defined RegEx Pairs. Each RegEx Pair consists of:
+1. A user-defined name / description. This is useful for remembering what a RegEx replacement is intended to do.
+2. A regular expression used to match text on the active line. This is what the plugin is looking to replace.
+3. "Replacement Text". This is the text that will be used to replace any matched regular expressions. Note that because the plugin uses the `replace` function, matched groups can be utilized in the replacement text. 
 
 ### Regular Expression Pattern
 
