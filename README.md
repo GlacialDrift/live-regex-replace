@@ -97,7 +97,7 @@ pair into an in-line data field.
 |:-------------:|:----------------:|:-------|
 | `(\w+)::\s+(\w+)` | `[$1:: $2]` | This pattern finds the `Key` that preceeds a `::` and the first word of the `Value` after the `::`. Only one value word is detected. Updating the same line will still find the original match inside the `[ ]`, causing nested replacements.|
 | `(?<!\[)(\w+)::\s+(\w+)(?!])` | `[$1:: $2]` | This pattern uses negative look-ahead and negative look-behind to ensure that only patterns without leading `[` and trailing `]` are detected. Still only detects one word after the `::`. |
-|`(\b\w+::(?:\s+[^:]+)+)\s*:`| `[$1]` | This RegEx pattern successfully detects a `Key` preceeding a `::`. The non-capturing group `(?:\s+[^:]+)+` ensures that the `Value` can be multiple words. The overall capturing group ensures the entire `Key:: Value` pair is captured, and the ending `:` marks the endpoint of the `Value`.
+|`(\b\w+::(?:\s+[^:]+)+)\s*:`| `[$1]` | This RegEx pattern successfully detects a `Key` preceeding a `::`. The non-capturing group `(?:\s+[^:]+)+` ensures that the `Value` can be multiple words. The overall capturing group ensures the entire `Key:: Value` pair is captured, and the ending `:` marks the endpoint of the `Value`.|
 
 ## Changelog
 
