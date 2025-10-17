@@ -112,7 +112,9 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			desc.createEl("code", {text: "(\\d{8})"}),
 			"). The replacement text can use those capture groups (e.g. ",
 			desc.createEl("code", {text: "[$1](...)"}),
-			")."
+			"). Use these fields carefully, as an empty ",
+			desc.createEl("code", {text: "replacement text"}),
+			" field will delete any text matched."
 		);
 
 		new Setting(this.containerEl)

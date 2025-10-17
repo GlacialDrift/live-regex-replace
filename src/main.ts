@@ -12,7 +12,7 @@ export default class LiveRegexReplace extends Plugin {
 		this.addSettingTab(new RegexReplaceSettingsTab(this.app, this));
 		this.compileRegex();
 
-		/*
+
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor) => {
 				if (!editor || this.isUpdating || !this.compiledRe || !this.settings.enableLiveUpdate) return;
@@ -22,17 +22,18 @@ export default class LiveRegexReplace extends Plugin {
 				const text = editor.getLine(cursor.line);
 
 				// Use string replacement so $1, $& work from user input
-				const updated = text.replace(re, this.settings.replacement);
-
-				if (updated !== text) {
-					this.isUpdating = true;
-					editor.setLine(cursor.line, updated);
-					this.isUpdating = false;
-				}
+				re.forEach(
+					(regexPattern, index) =>{
+						const updated = text.replace(regexPattern, this.settings.regex_patterns[index].regexReplace)
+						if (updated !== text) {
+							this.isUpdating = true;
+							editor.setLine(cursor.line, updated);
+							this.isUpdating = false;
+						}
+					}
+				);
 			})
 		);
-
-		 */
 	}
 
 	onunload() {}
@@ -60,7 +61,7 @@ export default class LiveRegexReplace extends Plugin {
 				this.compiledRe = new Array<RegExp>();
 			}
 			this.settings.regex_patterns.forEach(
-				(regexPattern, index) => {
+				(regexPattern) => {
 					this.compiledRe!.push(new RegExp(regexPattern.regexFind, flags));
 				}
 			);

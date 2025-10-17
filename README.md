@@ -1,6 +1,6 @@
 ---
 Author: Mike Harris
-Version: 0.2.0
+Version: 0.2.1
 Github: https://github.com/GlacialDrift/live-regex-replace
 ---
 
@@ -29,8 +29,8 @@ is replaced with a hyperlink to the active version of the document with the corr
 
 Care must be taken in designing the regular expressions and replacements. For example, using a regular expression 
 `WC:(d{8})` and replacement `[WC:$1](hyperlink)` will continually replace the text field of the hyperlink with additional 
-nested hyperlinks as the text field remains unchanged. Therefore, it is recommended that lookbehinds and lookaheads are 
-used to prevent cascading replacement.
+nested hyperlinks as the text field remains unchanged. Therefore, it is recommended that look-behinds and look-aheads are 
+used to prevent cascading replacement. Similarly, it is recommended that start and end tokens are clearly identified.
 
 Currently, the plugin only actively searches the line actively being edited. Therefore, to update existing text with a 
 hyperlink, simply click on the line containing the text and update the line. 
@@ -49,7 +49,7 @@ following regular expression:
 #### Regular Expression Flags
 
 Optional regular expression flags to be included with the pattern when compiling the regular expression pattern. 
-Currently, the global flag is always included regardless of user input, but other flags may be added.
+The user has the option of setting the global flag to always be included. 
 
 #### Replacement Text
 
@@ -68,6 +68,5 @@ this roadmap lays out some possible future changes, no future updates are guaran
 | 2025-10-03  | Add a markdown post-processor to include CSS classes in replaced text for optional CSS formatting                                                                                       |
 | 2025-10-03  | Add command to search the entire vault and automatically perform replacement on any matching text found in any file                                                                     |
 | 2025-10-03  | Add exclusion functionality so that text found within code blocks (or YAML frontmatter) is excluded from replacement                                                                    |
-| 2025-10-03  | Add ability to have multiple pattern-replacement pairs specified in the settings                                                                                                        |
 | 2025-10-03  | Add search functionality for the entire active document instead of the current active line of the note                                                                                  |
 | 2025-10-03  | Add Save-Settings and Load-Settings feature that saves the current settings to JSON file and allows loading of other settings JSON files (useful for experimenting with Regex Patterns) |

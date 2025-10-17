@@ -1,6 +1,6 @@
 {
 	"name": "live-regex-replace",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Auto replaces matched regex pattern with a designated replacement string. Useful for automatically hyperlinking text.",
 	"main": "main.js",
 	"scripts": {
