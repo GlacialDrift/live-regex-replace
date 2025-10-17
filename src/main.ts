@@ -3,7 +3,7 @@ import {RegexReplaceSettings, RegexReplaceSettingsTab, DEFAULT_SETTINGS} from ".
 
 export default class LiveRegexReplace extends Plugin {
 	settings!: RegexReplaceSettings;
-	private compiledRe: RegExp | null = null;
+	private compiledRe: Array<RegExp> | null = null;
 	private isUpdating = false;
 
 	async onload() {
@@ -46,7 +46,7 @@ export default class LiveRegexReplace extends Plugin {
 	}
 
 	compileRegex() {
-		/*
+
 		// Always include 'g'; allow i/m/u/s/y as user chooses
 		const cleanedFlags = [...new Set((this.settings.flags || "").split(""))]
 			.filter((f) => "gimsuy".includes(f))
@@ -54,13 +54,20 @@ export default class LiveRegexReplace extends Plugin {
 		const flags = (this.settings.requireGlobalFlag) ? (cleanedFlags.includes("g") ? cleanedFlags : cleanedFlags + "g") : cleanedFlags;
 
 		try {
-			this.compiledRe = new RegExp(this.settings.regexPattern, flags);
+			if(this.settings.regex_patterns.length === 0){
+				this.compiledRe = null;
+			}else{
+				this.compiledRe = new Array<RegExp>();
+			}
+			this.settings.regex_patterns.forEach(
+				(regexPattern, index) => {
+					this.compiledRe!.push(new RegExp(regexPattern.regexFind, flags));
+				}
+			);
 		} catch (e) {
 			this.compiledRe = null;
 			new Notice(`Invalid RegExp: ${(e as Error).message}`);
 		}
-
-		 */
 	}
 
 	/* Removed Exclude Block compatibility. Wasn't working as intended. Needs fixing
