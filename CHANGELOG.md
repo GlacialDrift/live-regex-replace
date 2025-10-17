@@ -19,3 +19,9 @@ For all individual changes, see the [Commit History](https://github.com/GlacialD
 - Updated registerEvent logic so the `Live Editor Updates` toggle functions
 - Updated settings tab with additional headers and descriptions
 - Updated source document organization.
+
+## Previous
+
+Changelog initiated for version 0.2.0. 
+
+Version 0.1.3 is the first functional release of the plugin. 

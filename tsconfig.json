@@ -7,7 +7,6 @@
 		"module": "ESNext",
 		"target": "ES2020",
 		"allowJs": false,
-		"strictFunctionTypes": true,
 		"noImplicitAny": true,
 		"noImplicitReturns": true,
 		"noUnusedLocals": true,
@@ -15,7 +14,6 @@
 		"importHelpers": true,
 		"downlevelIteration": true,
 		"isolatedModules": true,
-		"strictNullChecks": true,
 		"strict": true,
 		"lib": [
 			"DOM",
