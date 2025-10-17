@@ -251,21 +251,21 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 		});
 		ol.createEl("li", {text: "The third text field is used for the replacement text after the regular" +
 				" expression has been matched. This replacement text can utilize capture groups from the" +
-				" corresponding regular expression."
+				" corresponding regular expression (e.g. $1 and $2 for the first and second capture groups)."
 		});
 
 		desc.append(
 			"Below are the fields used to define regular expression patterns, the text to replace them with,",
 			" and a custom description of the regular expression purpose.",
 			ol,
-			"Care must be taken in designing the regular expressions and replacements. For example, using a regular expression ",
+			"Take care in designing the regular expressions and replacements. For example, using a regular expression ",
 			desc.createEl("code", {text: "WC:(\\d{8})"}),
 			" and replacement ",
 			desc.createEl("code", {text: "[WC:$1](hyperlink)"}),
 			" will continually replace the ",
 			desc.createEl("code", {text: "WC:\\d{8}"}),
 			" text with nested hyperlinks. It is therefore highly recommended that well-defined start/end tokens are ",
-			" used or look-ahead and look-behinds are used."
+			" used, or that look-ahead and look-behinds are used."
 		);
 
 		new Setting(this.containerEl)

@@ -69,6 +69,36 @@ The default setting uses `[WC:$1](hyperlink)`, where hyperlink is a link to the 
 Optional regular expression flags to be included with the pattern when compiling the regular expression pattern.
 The user has the option of setting the global flag to always be included.
 
+## Examples
+
+#### Replacement with Hyperlink
+
+The original use-case for this plugin was to search for text in a note matching a particular pattern and replace that 
+text with a hyperlink that includes some of the original text. Frequent reference to 8-digit document numbers led to 
+referencing them as `WC:########`, where `WC` is the abbreviation for the document control system. The same document
+control system allows for generation of hyperlinks that take you to the current active document by using something like
+`hyperlink-########` (abbreviated for clarity). 
+
+|   RegEx Pattern   | Replacement Text | Issues                                                                                                                                                                           |
+|:-----------------:|:----------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|   `WC:(\d{8})`    | `[WC:$1](hyperlink-$1)`| A successful hyperlink is created. However, updating the same line causes re-detection of the `WC:\d{8}` pattern. This creates nested hyperlinks every time the line is updated. |
+| `WC:(\d{8})(?!])` | `[WC:$1](hyperlink-$1)` | Adding a negative look-ahead, `(?!])`, ensures that only patterns that **are not** followed by `]` are matched.                                                                  |
+| `(?<!\[)WC:(\d{8})(?!]\()`| `[WC:$1](hyperlink-$1)` | Adding a negative look-behind, `(?<!\[)`, ensures that only patterns that **are not** preceeded by `[` are matched. The negative look-ahead is expanded, `(?!]\()`, to ensure that only patterns that **are not** followed by `](` are matched. |
+
+#### In-line Data Fields
+
+A common use case when using the [Dataview](https://github.com/blacksmithgu/obsidian-dataview) plugin for Obsidian 
+is to create in-line data fields that take the form `[Key:: Value]`. In personal use, writing the single brackets can 
+be frustrating because of the muscle memory of using `[[]]` to create links to other files. The creation of an in-line 
+data field can be assisted with RegEx replace. The goal is to write `Key:: Value (with Multiple Words?)` and turn the 
+pair into an in-line data field. 
+
+| RegEx Pattern | Replacement Text | Issues |
+|:-------------:|:----------------:|:-------|
+| `(\w+)::\s+(\w+)` | `[$1:: $2]` | This pattern finds the `Key` that preceeds a `::` and the first word of the `Value` after the `::`. Only one value word is detected. Updating the same line will still find the original match inside the `[ ]`, causing nested replacements.|
+| `(?<!\[)(\w+)::\s+(\w+)(?!])` | `[$1:: $2]` | This pattern uses negative look-ahead and negative look-behind to ensure that only patterns without leading `[` and trailing `]` are detected. Still only detects one word after the `::`. |
+|`(\b\w+::(?:\s+[^:]+)+)\s*:`| `[$1]` | This RegEx pattern successfully detects a `Key` preceeding a `::`. The non-capturing group `(?:\s+[^:]+)+` ensures that the `Value` can be multiple words. The overall capturing group ensures the entire `Key:: Value` pair is captured, and the ending `:` marks the endpoint of the `Value`.
+
 ## Changelog
 
 For the full changelog, see `CHANGELOG.md`
