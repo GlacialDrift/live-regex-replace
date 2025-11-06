@@ -165,7 +165,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 	 */
 	addAdvancedSettingsToggle(): void {
 		new Setting(this.containerEl)
-			.setName("Show advanced Settings")
+			.setName("Show advanced settings")
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.advancedToggle)
 					.onChange(async (value) => {
@@ -203,17 +203,17 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 		);
 
 		new Setting(this.containerEl)
-			.setName("Advanced Regular Expression Settings")
+			.setName("Advanced regular expression options")
 			.setHeading()
 			.setDesc(desc);
 
 		new Setting(this.containerEl)
-			.setName("Reset Regular Expressions")
-			.setDesc("Reset below values to default settings. WARNING: THIS WILL DELETE ANY CUSTOM REGEX PAIRS")
+			.setName("Reset regular expressions")
+			.setDesc("Reset below values to default settings. Warning, this will delete any custom regular expression pairs")
 			.addButton((but) => {
 				but
 					.setButtonText("Reset")
-					.setTooltip("Reset Regular Expressions to Default Settings")
+					.setTooltip("Reset regular expressions to default settings")
 					.setCta()
 					.onClick(async () => {
 						this.plugin.settings = {...DEFAULT_SETTINGS};
@@ -269,7 +269,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 		);
 
 		new Setting(this.containerEl)
-			.setName("Regular Expression Fields")
+			.setName("Regular expression fields")
 			.setDesc(desc)
 			.setHeading();
 
@@ -320,8 +320,8 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 
 		new Setting(this.containerEl)
 			.addButton((but) => {
-				but.setButtonText("Add new RegEx Pair")
-					.setTooltip("Add additional RegEx Pair")
+				but.setButtonText("Add new regular expression pair")
+					.setTooltip("Add an additional regular expression pair")
 					.setCta()
 					.onClick(async () => {
 						this.plugin.settings.regex_patterns.push({
@@ -354,12 +354,12 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 		);
 
 		new Setting(this.containerEl)
-			.setName("Regular Expression Flag Fields")
+			.setName("Regular expression flag fields")
 			.setDesc(desc)
 			.setHeading();
 
 		new Setting(this.containerEl)
-			.setName("Require global RegEx flag")
+			.setName("Require global regular expression flag")
 			.setDesc("When the toggle is on, forces the global flag, g, for all compiled regular expressions.")
 			.addToggle( (toggle) => {
 				toggle.setValue(this.plugin.settings.requireGlobalFlag)
@@ -372,7 +372,7 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 			});
 
 		new Setting(this.containerEl)
-			.setName("Regular Expression Flags")
+			.setName("Regular expression flags")
 			.setDesc("Valid regular expression flags include: g i m s u y")
 			.addText( (t) => {
 				t.setValue(this.plugin.settings.flags)
