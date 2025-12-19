@@ -1,8 +1,8 @@
 {
 	"id": "live-regex-replace",
 	"name": "Live Regex Replace",
-	"version": "0.2.1",
-	"minAppVersion": "1.9.14",
+	"version": "0.2.2",
+	"minAppVersion": "1.10.6",
 	"description": "Auto replaces matched regex pattern with a designated replacement string. Useful for automatically hyperlinking text.",
 	"author": "Mike Harris",
 	"isDesktopOnly": true

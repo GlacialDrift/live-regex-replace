@@ -2,6 +2,10 @@
 
 For all individual changes, see the [Commit History](https://github.com/GlacialDrift/live-regex-replace/commits/master).
 
+## Version 0.2.2
+
+- Changed replacement text field from a `Text` component to a `TextArea` component, allowing for multi-line inputs. 
+
 ## Version 0.2.1
 
 - Added support for multiple RegEx "pairs" in the settings

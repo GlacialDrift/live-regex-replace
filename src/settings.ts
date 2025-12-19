@@ -293,13 +293,15 @@ export class RegexReplaceSettingsTab extends PluginSettingTab {
 							});
 						t.inputEl.classList.add("regex_field");
 					})
-					.addText((t) => {
-						t.setValue(regexPattern.regexReplace)
+					.addTextArea((ta) => {
+						ta.setValue(regexPattern.regexReplace)
 							.onChange(async (value) => {
 								this.plugin.settings.regex_patterns[index].regexReplace = value;
 								await this.plugin.saveSettings();
 							});
-						t.inputEl.classList.add("regex_field");
+						ta.inputEl.rows = 4;
+						ta.inputEl.style.fontFamily = "monospace";
+						ta.inputEl.classList.add("regex_field");
 					})
 					.addExtraButton((cb) => {
 						cb.setIcon("cross")

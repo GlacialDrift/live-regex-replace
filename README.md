@@ -1,6 +1,6 @@
 ---
 Author: Mike Harris
-Version: 0.2.1
+Version: 0.2.2
 Github: https://github.com/GlacialDrift/live-regex-replace
 ---
 
@@ -63,6 +63,8 @@ expression and `$&` to match the entire pattern. The plugin ships with a hyperli
 documents.
 
 The default setting uses `[WC:$1](hyperlink)`, where hyperlink is a link to the corresponding Windchill document. 
+
+Since version 0.2.2, this field is a TextArea Component that allows multiple input lines. 
 
 ### Regular Expression Flags
 
